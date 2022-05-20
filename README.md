@@ -1,60 +1,325 @@
-# Relatório de testes
+# Kanvas
 
-Todas as atividades do trimestre possuem requisitos mínimos obrigatórios:
+It's a project where you can administrate your courses, adding students and instructors and add the address of them.
 
-<section class="hilightedContet">
+# Users
 
-<header>**Importante!**</header>
+## POST /api/accounts/
 
-O **formato dos JSONs** de todas as requisições e respostas deve coincidir com os formatos especificados nos enunciados.
+This endpoint is to registrate the users.
 
-As **URLs** definidas devem ser as mesmas especificadas.
+Input:
 
-Os **códigos de status HTTP** também devem ser iguais aos definidos para as atividades.
+```json
+{
+  "first_name": "eric",
+  "last_name": "martins",
+  "email": "eric@bol.com.br",
+  "password": "1234",
+  "is_admin": true
+}
+```
 
-</section>
+If the request is sucessfully(201 Created).
 
-Para auxiliar na checagem desses requisitos e verificar se tudo está de acordo com essas três regras, serão disponibilizados arquivos de testes para cada atividade. Esses arquivos terão o objetivo de garantir que os requisitos mínimos obrigatórios estão sendo atendidos em seu projeto, além de auxiliar a equipe de ensino durante a correção das atividades.
+Output:
 
-Cada atividade terá um link para seu respectivo arquivo de testes. Basta adicioná-lo à raiz do seu projeto e rodar o seguinte comando:
+```json
+{
+  "first_name": "eric",
+  "last_name": "martins",
+  "email": "eric@bol.com.br",
+  "is_admin": true
+}
+```
 
-    python manage.py test -v 2 &> report.txt
+## POST /api/login/
 
-O comando executará os testes e adicionará a saída da execução num arquivo chamado `report.txt`. Esse arquivo conterá um relatório dos testes executados e seus respectivos resultados. Caso ele aponte falhas, significa que os requisitos mínimos não estão sendo totalmente cumpridos em seu projeto. Se isso acontecer, o relatório indicará o erro encontrado e apontará o que precisa ser corrigido. Você pode gerar o relatório quantas vezes achar necessário. Apenas a versão final deve ser enviada junto com os demais arquivos do projeto.
+This endpoint is to login whith user.
 
-## Utilizando banco Postgres
+Input:
 
-Existe um problema quando rodamos os testes em um banco Postgres, porque ele não reseta os IDs por padrão. Para o caso dos nossos testes, isso é uma pequena dor de cabeça.
+```json
+{
+  "email": "eric@bol.com.br",
+  "password": "1234"
+}
+```
 
-Sendo assim, caso você queira utilizar um banco Postgres em seu projeto, será necessário incluir a configuração do SQLite apenas para rodar os testes.
+If the request is sucessfully(200 OK).
 
-    # settings.py
+Output:
 
-    import os
+```json
+{
+  "token": "919e1c3a055ee5d0a2ccec2b93d62a3d90b0bbb1"
+}
+```
 
-    ...
+## GET /api/accounts/
 
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': <nome-do-seu-banco>,
-            'USER': <nome-do-user>,
-            'PASSWORD': <senha-do-user>,
-            'HOST': <db-hostname-ou-ip>, # Por estar configurado localmente vai ser no localhost ou 127.0.0.1
-            'PORT': <porta-do-banco> # Por padrão o PostgreSQL roda na porta 5432
-        }
+This endpoint is to get all user, it's required to be a admin and the bearer autentication token.
+
+Input:
+Don't need Input.
+
+If the request is sucessfully(200 OK).
+
+Output:
+
+```json
+[
+  {
+    "uuid": "5d880acd-cad7-424d-9b23-dffa6aa10372",
+    "first_name": "eric",
+    "last_name": "martins",
+    "email": "eric@bol.com.br",
+    "is_admin": true
+  }
+]
+```
+
+# Address
+
+## PUT /api/address/
+
+This endpoint is to add a address to a user, it's not required to be a admin but the bearer autentication token is required.
+
+Input:
+
+```json
+{
+  "zip_code": "123456789",
+  "street": "Rua das Flores",
+  "house_number": "123",
+  "city": "Curitiba",
+  "state": "Paraná",
+  "country": "Brasil"
+}
+```
+
+If the request is sucessfully(200 OK).
+
+Output:
+
+```json
+{
+  "uuid": "38670659-ca2e-4906-a5e9-3fb93c18cccb",
+  "street": "Rua das Flores",
+  "house_number": 123.0,
+  "city": "Curitiba",
+  "state": "Paraná",
+  "zip_code": "123456789",
+  "country": "Brasil",
+  "users": [
+    {
+      "uuid": "cd38010a-4b8d-4257-b160-761ed34bf183",
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john_doe@bol.com.br",
+      "is_admin": false
     }
+  ]
+}
+```
 
-    test = os.environ.get('TEST')
+# Courses
 
-    if test:    
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
+## POST /api/courses/
 
-No momento de executar, é necessário incluir a variável `TEST` antes do comando.
+This endpoint is to create a course, it's required to be a admin and the bearer autentication token.
 
-    TEST=TEST python manage.py test -v 2 &> report.txt
+Input:
+
+```json
+{
+  "name": "Django",
+  "demo_time": "9:00",
+  "link_repo": "https://gitlab.com/turma_django/"
+}
+```
+
+If the request is sucessfully(201 Created).
+
+Output:
+
+```json
+{
+  "uuid": "db4ff40f-549d-4717-a205-5ef81dde6e5c",
+  "name": "Django",
+  "link_repo": "https://gitlab.com/turma_django/",
+  "demo_time": "09:00:00",
+  "created_at": "2022-05-17",
+  "instructor": null,
+  "students": []
+}
+```
+
+## GET /api/courses/
+
+This endpoint is to get all thr courses, it's not required to be a admin but the bearer autentication token is required.
+
+Input:
+Don't need input.
+
+If the request is sucessfully(200 OK).
+
+Output:
+
+```json
+[
+  {
+    "uuid": "dba4ab8b-77a3-4b6e-bc98-05d6e9f6c7dd",
+    "name": "Django",
+    "link_repo": "https://gitlab.com/turma_node/",
+    "demo_time": "08:00:00",
+    "created_at": "2022-05-17",
+    "instructor": null,
+    "students": []
+  },
+  {
+    "uuid": "db4ff40f-549d-4717-a205-5ef81dde6e5c",
+    "name": "Django",
+    "link_repo": "https://gitlab.com/turma_django/",
+    "demo_time": "09:00:00",
+    "created_at": "2022-05-17",
+    "instructor": null,
+    "students": []
+  }
+]
+```
+
+## GET /api/courses/<course_id>/
+
+This endpoint is to get a specific course, it's not required to be a admin but the bearer autentication token is required and the id must be pass in the url.
+
+Input:
+Don't need input
+
+If the request is sucessfully(200 OK).
+
+Output:
+
+```json
+{
+  "uuid": "dba4ab8b-77a3-4b6e-bc98-05d6e9f6c7dd",
+  "name": "Django",
+  "link_repo": "https://gitlab.com/turma_node/",
+  "demo_time": "08:00:00",
+  "created_at": "2022-05-17",
+  "instructor": null,
+  "students": []
+}
+```
+
+## PATCH /api/courses/<course_id>/
+
+This endpoint is to update a specific course, it's required to be a admin, the bearer autentication token and the id must be pass in the url.
+
+Input:
+
+```json
+{
+  "name": "Django",
+  "demo_time": "8:00",
+  "link_repo": "https://gitlab.com/turma_node/"
+}
+```
+
+If the request is sucessfully(200 OK).
+
+Output:
+
+```json
+{
+  "uuid": "c679f1a7-0a40-4037-9cb7-b0bb7b00836e",
+  "name": "Django",
+  "link_repo": "https://gitlab.com/turma_node/",
+  "demo_time": "08:00:00",
+  "created_at": "2022-05-17",
+  "instructor": null,
+  "students": []
+}
+```
+
+## PUT /api/courses/<course_id>/registrations/instructor/
+
+This endpoint is to add a instructor to a specific course, it's required to be a admin, the bearer autentication token and the id must be pass in the url. The instructors are only admin users.
+
+Input:
+
+```json
+{
+  "instructor_id": "5d880acd-cad7-424d-9b23-dffa6aa10372"
+}
+```
+
+If the request is sucessfully(200 OK).
+
+Output:
+
+```json
+{
+  "uuid": "c679f1a7-0a40-4037-9cb7-b0bb7b00836e",
+  "name": "Node",
+  "link_repo": "https://gitlab.com/turma_node/",
+  "demo_time": "08:00:00",
+  "created_at": "2022-05-17",
+  "instructor": {
+    "uuid": "5d880acd-cad7-424d-9b23-dffa6aa10372",
+    "first_name": "eric",
+    "last_name": "martins",
+    "email": "eric@bol.com.br",
+    "is_admin": true
+  },
+  "students": []
+}
+```
+
+## PUT /api/courses/<course_id>/registrations/students/
+
+This endpoint is to add a list of students to a specific course, it's required to be a admin, the bearer autentication token and the id must be pass in the url. The students are only not admin users.
+
+Input:
+
+```json
+{
+  "students_id": ["cd38010a-4b8d-4257-b160-761ed34bf183"]
+}
+```
+
+If the request is sucessfully(200 OK).
+
+Output:
+
+```json
+{
+  "uuid": "dba4ab8b-77a3-4b6e-bc98-05d6e9f6c7dd",
+  "name": "Django",
+  "link_repo": "https://gitlab.com/turma_node/",
+  "demo_time": "08:00:00",
+  "created_at": "2022-05-17",
+  "instructor": null,
+  "students": [
+    {
+      "uuid": "cd38010a-4b8d-4257-b160-761ed34bf183",
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john_doe@bol.com.br",
+      "is_admin": false
+    }
+  ]
+}
+```
+
+## DELETE /api/courses/<course_id>/
+
+This endpoint is to delete a specific course, it's required to be a admin, the bearer autentication token and the id must be pass in the url.
+
+Input:
+Don't need input.
+
+If the request is sucessfully(204 No content).
+
+Output:
+Don't have.
